@@ -1,0 +1,6 @@
+# Les scripts exécutés dans les conteneurs Linux doivent rester en LF, même sous Windows (sinon : "bad interpreter")
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.yml  text eol=lf
+*.conf text eol=lf
+*.py   text eol=lf

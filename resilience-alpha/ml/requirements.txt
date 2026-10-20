@@ -1,0 +1,8 @@
+# Détection d'anomalies (entraînement sur le PC, détecteur en conteneur). Python 3.11 ou 3.12.
+-r ../libs/common/requirements.txt
+numpy==2.4.6
+pandas==3.0.6
+scipy==1.17.1
+scikit-learn==1.9.1
+joblib==1.6.0
+threadpoolctl==3.7.0

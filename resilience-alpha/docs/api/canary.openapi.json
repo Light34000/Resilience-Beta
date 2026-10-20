@@ -1,0 +1,90 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RESILIENCE-ALPHA · canary",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/internal/probe": {
+      "get": {
+        "tags": [
+          "canary"
+        ],
+        "summary": "Run Now",
+        "description": "Exécute une transaction de contrôle immédiate (utilisé par le moteur de remédiation pour valider la reprise).",
+        "operationId": "run_now_internal_probe_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/internal/status": {
+      "get": {
+        "tags": [
+          "canary"
+        ],
+        "summary": "Status",
+        "operationId": "status_internal_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/internal/history": {
+      "get": {
+        "tags": [
+          "canary"
+        ],
+        "summary": "History",
+        "operationId": "history_internal_history_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: services
+    metrics_path: /metrics
+    static_configs:
+      - {targets: ["auth:8000"],          labels: {service: auth}}
+      - {targets: ["accounts:8000"],      labels: {service: accounts}}
+      - {targets: ["payments:8000"],      labels: {service: payments}}
+      - {targets: ["notifications:8000"], labels: {service: notifications}}
+      - {targets: ["audit:8000"],         labels: {service: audit}}
+      - {targets: ["remediation:8000"],   labels: {service: remediation}}
+      - {targets: ["canary:8000"],        labels: {service: canary}}

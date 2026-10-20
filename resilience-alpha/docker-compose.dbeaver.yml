@@ -1,0 +1,15 @@
+# Accès DBeaver (ou psql) à PostgreSQL depuis le PC Hôte, en OPTION.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dbeaver.yml up -d
+#
+# Pourquoi un fichier à part : `backend` est un réseau interne, Docker n'y publie aucun port.
+# Postgres rejoint donc un réseau dédié, et le port n'est lié qu'à 127.0.0.1 (jamais au réseau 192.168.137.0/24).
+# Pour revenir à la configuration par défaut (base inaccessible de l'extérieur) :
+#   docker compose up -d        # sans le second -f
+services:
+  postgres:
+    ports: ["127.0.0.1:5432:5432"]
+    networks: [backend, dbaccess]
+
+networks:
+  dbaccess: {}

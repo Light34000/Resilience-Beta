@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+/* Variante « light: » / « dark: » selon l'attribut data-theme posé par le layout racine. */
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Jetons « Banque privée » (voir design-system/resilience-alpha/MASTER.md).
+   Clair par défaut ; sombre via data-theme="dark". La palette Tailwind par défaut est désactivée.
+   Contrastes vérifiés (WCAG AA) : voir le tableau du MASTER. */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f5f1; /* papier ivoire */
+  --surface: #ffffff;
+  --surface-subtle: #f1efe9;
+  --hover: #f3f1ec;
+  --border: #e3e0d8;
+  --border-strong: #8a8578; /* bordures de champs : 3,4:1 */
+  --fg: #0e1a2b; /* encre marine */
+  --fg-muted: #4a5263;
+  --fg-subtle: #5f6878;
+  --primary: #1d4a80; /* liens, éléments actifs, focus (9:1) */
+  --primary-hover: #163a66;
+  --primary-solid: #1b2f4e; /* fond des boutons principaux */
+  --primary-solid-hover: #233d64;
+  --on-primary: #ffffff; /* sur primary-solid : 13,4:1 */
+  --primary-tint: #ebf1f8;
+  --gold: #8a6a1f; /* détails décoratifs uniquement (filets, point du logo) */
+  --live: #1d4a80;
+  --success: #1d6b45;
+  --success-tint: #eaf4ee;
+  --warning: #8a5300;
+  --warning-tint: #fbf3e4;
+  --danger: #a61b29;
+  --danger-tint: #fbecee;
+  --panel: #13243f; /* panneau marine (connexion) */
+  --shadow-card: 0 1px 2px rgb(14 26 43 / 0.05), 0 1px 1px rgb(14 26 43 / 0.03);
+  --shadow-overlay: 0 16px 40px -12px rgb(14 26 43 / 0.25);
+  --scrim: rgb(14 26 43 / 0.45);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b111c;
+  --surface: #111a29;
+  --surface-subtle: #172235;
+  --hover: #172235;
+  --border: #223049;
+  --border-strong: #5f6c86;
+  --fg: #eceff4;
+  --fg-muted: #a9b3c4;
+  --fg-subtle: #8e99ad;
+  --primary: #93b4e2;
+  --primary-hover: #b1c9ec;
+  --primary-solid: #c9d8ef;
+  --primary-solid-hover: #dbe5f5;
+  --on-primary: #0b111c;
+  --primary-tint: #182a45;
+  --gold: #d4b574;
+  --live: #93b4e2;
+  --success: #5cc58a;
+  --success-tint: #12291f;
+  --warning: #e8b04a;
+  --warning-tint: #2a2112;
+  --danger: #f08a8f;
+  --danger-tint: #2d161a;
+  --panel: #0e1828;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-overlay: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+  --scrim: rgb(0 0 0 / 0.6);
+}
+
+@theme {
+  --color-*: initial;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --animate-dash: dash 1.2s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.2, 0, 0, 1) infinite;
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0, 0, 1) both;
+
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(1);
+      opacity: 0.4;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-hover: var(--hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-solid-hover: var(--primary-solid-hover);
+  --color-on-primary: var(--on-primary);
+  --color-primary-tint: var(--primary-tint);
+  --color-gold: var(--gold);
+  --color-live: var(--live);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-panel: var(--panel);
+  --color-scrim: var(--scrim);
+  --shadow-card: var(--shadow-card);
+  --shadow-overlay: var(--shadow-overlay);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--bg);
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  button,
+  [role="button"],
+  summary,
+  select {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  ::selection {
+    background: var(--primary-tint);
+    color: var(--fg);
+  }
+  select option {
+    background: var(--surface);
+    color: var(--fg);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Carte : surface pleine, bordure fine, ombre très légère. */
+  .card {
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

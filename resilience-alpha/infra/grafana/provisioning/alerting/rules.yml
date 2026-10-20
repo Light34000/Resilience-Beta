@@ -1,0 +1,170 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: resilience-alpha-detection
+    folder: RESILIENCE-ALPHA
+    interval: 10s
+    rules:
+
+      # Alerte 1 — Taux de réponses 5xx anormalement élevé.
+      # Construite directement sur la métrique et les labels déjà utilisés
+      # par le panel "Part de réponses 5xx" du dashboard traffic.json.
+      - uid: dos-5xx-ratio
+        title: "DoS applicatif — taux d'erreurs 5xx"
+        condition: C
+        for: 20s
+        labels:
+          severity: critical
+          scenario: dos-applicatif
+        annotations:
+          summary: "Plus de 30% de réponses 5xx sur les services métier"
+          description: >
+            Sur la fenêtre glissante d'une minute, plus de 30% des requêtes agrégées
+            pour auth, accounts, payments, notifications et audit renvoient une
+            erreur 5xx (hors endpoints /ready, /health et /metrics). Le seuil doit
+            rester dépassé pendant 20 secondes pour déclencher l'alerte.
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 120
+              to: 0
+            model:
+              expr: >-
+                sum(rate(http_requests_total{service=~"auth|accounts|payments|notifications|audit", path!~"/ready|/health|/metrics", status=~"5.."}[1m]))
+                /
+                sum(rate(http_requests_total{service=~"auth|accounts|payments|notifications|audit", path!~"/ready|/health|/metrics"}[1m]))
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.3]
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+
+      # Alerte 2 — Latence p95 anormalement élevée (complète la détection
+      # 5xx : une saturation peut dégrader la latence avant de produire
+      # des erreurs franches). Basée sur le panel "Latence p95, par service".
+      - uid: dos-latency-p95
+        title: "DoS applicatif — latence p95 élevée"
+        condition: C
+        for: 5s
+        labels:
+          severity: warning
+          scenario: dos-applicatif
+        annotations:
+          summary: "Latence p95 supérieure à 400 ms sur un service métier"
+          description: >
+            La latence p95 dépasse 0,4 seconde sur au moins un service parmi auth,
+            accounts, payments, notifications et audit, hors endpoints /ready,
+            /health et /metrics. Le seuil doit rester dépassé pendant 20 secondes
+            pour déclencher l'alerte.
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 120
+              to: 0
+            model:
+              expr: >-
+                histogram_quantile(0.95, sum by (service, le) (rate(http_request_duration_seconds_bucket{service=~"auth|accounts|payments|notifications|audit", path!~"/ready|/health|/metrics"}[1m])))
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.4]
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+
+      # Alerte 3 — Détecte les transactions lentes même si le gauge ne dépasse
+      # le seuil qu'entre deux évaluations du groupe.
+      - uid: canary-slow-transaction
+        title: "Sonde de contrôle — transaction supérieure à 2 s"
+        condition: C
+        for: 0s
+        labels:
+          severity: warning
+          scenario: dos-applicatif
+        annotations:
+          summary: "La transaction de contrôle de la sonde dépasse 2 secondes"
+          description: >
+            La durée maximale observée de canary_probe_duration_seconds sur les
+            30 dernières secondes dépasse 2 secondes. La fenêtre permet de détecter
+            une transaction lente même si sa valeur a changé entre deux évaluations.
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 60
+              to: 0
+            model:
+              expr: max_over_time(canary_probe_duration_seconds[30s])
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+
+      # Alerte 4 — La sonde de transaction de contrôle (canary) échoue.
+      # S'appuie sur recovery.json : c'est elle qui donne la preuve de reprise
+      # exigée par le sujet (pas seulement l'état du conteneur).
+      - uid: canary-down
+        title: "Service de paiement indisponible — sonde de contrôle"
+        condition: C
+        for: 10s
+        labels:
+          severity: critical
+          scenario: dos-applicatif
+        annotations:
+          summary: "La sonde de transaction est en échec ou sans données"
+          description: >
+            canary_up est inférieur à 1, ou la métrique est absente. Cela indique
+            que la transaction de contrôle échoue ou que la sonde ne fournit plus
+            de données. L'alerte se déclenche après 10 secondes d'échec ; l'absence
+            de données est configurée pour être considérée comme une alerte.
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 60
+              to: 0
+            model:
+              expr: "canary_up"
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+              refId: C
+        noDataState: Alerting
+        execErrState: Error

@@ -1,0 +1,16 @@
+apiVersion: 1
+# uid fixes : les dashboards provisionnés (../dashboards/json) référencent les sources par uid.
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 5s   # = scrape_interval : $__rate_interval ne descend pas sous 4 × 5 s
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100

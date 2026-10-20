@@ -1,0 +1,1297 @@
+{
+  "uid": "ra-recovery",
+  "title": "Resilience Alpha · Reprise autonome",
+  "description": "Avant / pendant / après un incident : disponibilité, preuve de reprise, remédiation. Annotations : alertes de la sonde, remédiations lancées, reprises prouvées.",
+  "tags": [
+    "resilience-alpha",
+    "reprise",
+    "jury"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "schemaVersion": 39,
+  "version": 1,
+  "links": [
+    {
+      "title": "Reprise autonome",
+      "type": "link",
+      "url": "/d/ra-recovery",
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "Trafic et paiements",
+      "type": "link",
+      "url": "/d/ra-traffic",
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "tooltip": ""
+    },
+    {
+      "title": "Journaux et sécurité",
+      "type": "link",
+      "url": "/d/ra-logs",
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "tooltip": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "Alerte de la sonde",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "enable": true,
+        "iconColor": "#fab219",
+        "expr": "{service=\"canary\"} | json | event=\"canary_alert_sent\"",
+        "textFormat": "Alerte envoyée à la remédiation : {{service_extracted}} ({{type}})",
+        "tagKeys": "",
+        "titleFormat": "Alerte sonde"
+      },
+      {
+        "name": "Remédiation lancée",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "enable": true,
+        "iconColor": "#9085e9",
+        "expr": "{service=\"remediation\"} | json | event=\"remediation_step\" | state=\"remediating\"",
+        "textFormat": "{{message}}",
+        "tagKeys": "",
+        "titleFormat": "Remédiation"
+      },
+      {
+        "name": "Reprise prouvée",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "enable": true,
+        "iconColor": "#0ca30c",
+        "expr": "{service=\"remediation\"} | json | event=\"remediation_step\" | state=\"resolved\"",
+        "textFormat": "{{service_extracted}} : {{message}}",
+        "tagKeys": "",
+        "titleFormat": "Reprise prouvée"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Maintenant",
+      "id": 1,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "title": "Paiement de contrôle",
+      "description": "canary_up : 1 si la dernière transaction de la sonde (paiement réel via la passerelle) a réussi. C'est l'indicateur « le service est utilisable ».",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "canary_up",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": null,
+          "noValue": "—",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "En échec",
+                  "color": "#d03b3b"
+                },
+                "1": {
+                  "text": "Réussie",
+                  "color": "#0ca30c"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "Sans succès depuis",
+      "description": "time() - canary_last_success_timestamp_seconds. Normalement < 10 s (une sonde toutes les 5 s).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "time() - canary_last_success_timestamp_seconds",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "noValue": "—",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 15
+              },
+              {
+                "color": "#d03b3b",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "Données",
+      "description": "canary_data_consistent : solde de chaque compte = somme de ses écritures au ledger. Doit rester « Cohérentes », y compris après une reprise.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "canary_data_consistent",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": null,
+          "noValue": "—",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Incohérentes",
+                  "color": "#d03b3b"
+                },
+                "1": {
+                  "text": "Cohérentes",
+                  "color": "#0ca30c"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "Incidents actifs",
+      "description": "remediation_active_incidents : incidents en cours de traitement par le moteur.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "remediation_active_incidents",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": null,
+          "noValue": "—",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "title": "Reprises prouvées",
+      "description": "Sur la période affichée : incidents clos « resolved » : redémarrage + nouvelle transaction réussie + données cohérentes.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum(increase(remediation_incidents_total{status=\"resolved\"}[$__range]))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "stat",
+      "id": 7,
+      "title": "Durée de reprise p95",
+      "description": "Sur la période affichée. Durée alerte → service prouvé rétabli (histogramme remediation_recovery_seconds). Peu d'incidents = estimation grossière.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(remediation_recovery_seconds_bucket[$__range])))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "noValue": "—",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "showPercentChange": false,
+        "wideLayout": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "Avant / pendant / après",
+      "id": 8,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "panels": []
+    },
+    {
+      "type": "state-timeline",
+      "id": 9,
+      "title": "Disponibilité vue par la sonde",
+      "description": "Chaque ligne : /ready du service (canary_service_ready) et la transaction de bout en bout (canary_up). Vert = opérationnel, rouge = indisponible.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "canary_up",
+          "legendFormat": "e2e",
+          "range": true,
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "canary_service_ready",
+          "legendFormat": "{{exported_service}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Indisponible",
+                  "color": "#d03b3b"
+                },
+                "1": {
+                  "text": "Opérationnel",
+                  "color": "#0ca30c"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#898781"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "noValue": "Pas de mesure"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "e2e"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Transaction de bout en bout"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "auth"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentification (/ready)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "accounts"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Comptes (/ready)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "payments"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Paiements (/ready)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "notifications"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Notifications (/ready)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "audit"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Audit (/ready)"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "alignValue": "left",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "type": "state-timeline",
+      "id": 10,
+      "title": "Conteneurs scrapés par Prometheus",
+      "description": "up : 1 si Prometheus joint le /metrics du service, 0 si le conteneur est arrêté. Vue technique, complémentaire de la sonde.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "up{job=\"services\"}",
+          "legendFormat": "{{service}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Indisponible",
+                  "color": "#d03b3b"
+                },
+                "1": {
+                  "text": "Opérationnel",
+                  "color": "#0ca30c"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#898781"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "noValue": "Pas de mesure"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "auth"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentification"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "accounts"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Comptes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "payments"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Paiements"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "notifications"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Notifications"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "audit"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Audit"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "remediation"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Remédiation"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "canary"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sonde"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "alignValue": "left",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 11,
+      "title": "Durée de la transaction de contrôle",
+      "description": "canary_probe_duration_seconds : durée du dernier paiement de la sonde. Une hausse précède souvent la panne.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "canary_probe_duration_seconds",
+          "legendFormat": "Durée",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": null,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 8,
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "noValue": "Aucune donnée sur la période"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 12,
+      "title": "Sondes par minute, par résultat",
+      "description": "canary_probes_total : sondes réussies et en échec (environ 12 par minute).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (result) (rate(canary_probes_total[$__rate_interval])) * 60",
+          "legendFormat": "{{result}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 8,
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "Aucune donnée sur la période"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "success"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Réussies"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#0ca30c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failure"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "En échec"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d03b3b"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Remédiation",
+      "id": 13,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 14,
+      "title": "Incidents sur la période, par service et issue",
+      "description": "increase(remediation_incidents_total[période]). L'historique détaillé est dans l'audit et dans le journal ci-contre.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 9,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (exported_service, status) (increase(remediation_incidents_total[$__range])) > 0",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "exported_service": "Service",
+              "status": "Issue",
+              "Value": "Incidents"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "—"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Incidents"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "auth": {
+                        "text": "Authentification"
+                      },
+                      "accounts": {
+                        "text": "Comptes"
+                      },
+                      "payments": {
+                        "text": "Paiements"
+                      },
+                      "notifications": {
+                        "text": "Notifications"
+                      },
+                      "audit": {
+                        "text": "Audit"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issue"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "resolved": {
+                        "text": "Résolu",
+                        "color": "#0ca30c"
+                      },
+                      "failed": {
+                        "text": "Échec",
+                        "color": "#d03b3b"
+                      },
+                      "escalated": {
+                        "text": "Escaladé",
+                        "color": "#fab219"
+                      },
+                      "suppressed": {
+                        "text": "Bloqué (disjoncteur)",
+                        "color": "#fab219"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "sortBy": []
+      }
+    },
+    {
+      "type": "logs",
+      "id": 15,
+      "title": "Déroulé des reprises",
+      "description": "Étapes du moteur (detected → remediating → verifying → resolved). Le service concerné est service_extracted (le champ JSON écrase le label).",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 15,
+        "x": 9,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "expr": "{service=\"remediation\"} | json | event=\"remediation_step\" | line_format \"{{.service_extracted}} · {{.state}} · {{.message}}\"",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ]
+}

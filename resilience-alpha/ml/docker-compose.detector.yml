@@ -1,0 +1,39 @@
+# Option : détection ML en temps réel et blocage à la passerelle. La pile par défaut n'en dépend pas.
+#
+#   python ml/train.py --since 60m        # d'abord : produire ml/model/model.joblib (voir docs/02, section 3)
+#   docker compose -f docker-compose.yml -f ml/docker-compose.detector.yml up -d --build detector gateway
+#
+# Revenir à la passerelle sans contrôle :  docker compose up -d gateway   (sans le second -f)
+services:
+  detector:
+    build: {context: ., dockerfile: ml/Dockerfile}
+    image: rsl/detector:dev
+    container_name: rsl-detector
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?requis - lancer python scripts/gen_env.py}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AUDIT_URL: http://audit:8000
+      LOKI_URL: http://loki:3100
+      REMEDIATION_URL: http://remediation:8000
+      MODEL_PATH: /app/model/model.joblib
+      BLOCK_TTL_SECONDS: ${DETECTOR_BLOCK_TTL_SECONDS:-600}
+    volumes:
+      - ./ml/model:/app/model:ro
+    depends_on: [loki]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    networks: [backend]
+
+  # Même passerelle, avec un contrôle auth_request vers le détecteur avant chaque requête /api.
+  gateway:
+    volumes:
+      - ./ml/nginx.detector.conf:/etc/nginx/conf.d/default.conf:ro

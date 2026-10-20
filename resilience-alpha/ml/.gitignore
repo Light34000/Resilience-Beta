@@ -1,0 +1,4 @@
+# Artefacts locaux : modèle entraîné sur VOS données, exports de journaux.
+model/
+data/
+__pycache__/
