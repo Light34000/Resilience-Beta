@@ -61,11 +61,11 @@ groups:
           severity: warning
           scenario: dos-applicatif
         annotations:
-          summary: "Latence p95 supérieure à 400 ms sur un service métier"
+          summary: "Latence p95 supérieure à 600 ms sur un service métier"
           description: >
-            La latence p95 dépasse 0,4 seconde sur au moins un service parmi auth,
+            La latence p95 dépasse 0,6 seconde sur au moins un service parmi auth,
             accounts, payments, notifications et audit, hors endpoints /ready,
-            /health et /metrics. Le seuil doit rester dépassé pendant 20 secondes
+            /health et /metrics. Le seuil doit rester dépassé pendant 5 secondes
             pour déclencher l'alerte.
         data:
           - refId: A
